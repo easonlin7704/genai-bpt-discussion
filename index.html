@@ -1,0 +1,832 @@
+<title>GenAI 行為模擬命題討論稿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<style>
+  :root {
+    --ground:    #F2F2F0;
+    --paper:     #FFFFFF;
+    --ink:       #111418;
+    --ink-soft:  #3D444E;
+    --ink-mute:  #737A85;
+    --hair:      #C9CDD3;
+    --hair-soft: #E4E6E9;
+    --accent:    #1B3A5C;
+    --accent-up: #2E5885;
+
+    --serif: "Source Serif 4", "Noto Serif TC", Georgia, "Times New Roman", serif;
+    --sans:  "Noto Sans TC", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+    --col: 48rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:    #0C0E11;
+      --paper:     #14171B;
+      --ink:       #E9EBEE;
+      --ink-soft:  #AEB5BF;
+      --ink-mute:  #7C848F;
+      --hair:      #333941;
+      --hair-soft: #22272D;
+      --accent:    #9DB9D9;
+      --accent-up: #BDD1E8;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:    #0C0E11;
+    --paper:     #14171B;
+    --ink:       #E9EBEE;
+    --ink-soft:  #AEB5BF;
+    --ink-mute:  #7C848F;
+    --hair:      #333941;
+    --hair-soft: #22272D;
+    --accent:    #9DB9D9;
+    --accent-up: #BDD1E8;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15.5px;
+    line-height: 1.9;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .sheet {
+    max-width: var(--col);
+    margin: 0 auto;
+    padding: 0 1.5rem 6rem;
+    background: var(--paper);
+  }
+
+  @media (min-width: 52rem) {
+    .sheet {
+      max-width: calc(var(--col) + 7rem);
+      padding: 0 3.5rem 6rem;
+      margin: 2.5rem auto;
+      border: 1px solid var(--hair);
+    }
+  }
+
+  /* ---------- letterhead ---------- */
+
+  .masthead { padding: 3rem 0 0; }
+
+  .rule-top {
+    border-top: 3px solid var(--ink);
+    padding-top: 0.85rem;
+  }
+
+  .eyebrow {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.26em;
+    color: var(--ink-mute);
+  }
+
+  .eyebrow .firm { color: var(--ink); }
+  .eyebrow time { font-variant-numeric: tabular-nums; letter-spacing: 0.16em; }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(1.8rem, 4vw, 2.35rem);
+    line-height: 1.32;
+    letter-spacing: 0.005em;
+    margin: 1.6rem 0 1.5rem;
+    text-wrap: balance;
+  }
+
+  .masthead .rule-bottom { border-bottom: 1px solid var(--ink); }
+
+  /* ---------- tabs ---------- */
+
+  .tabs {
+    display: flex;
+    gap: 2rem;
+    border-bottom: 1px solid var(--hair);
+    margin-top: 0;
+  }
+
+  .tabs button {
+    appearance: none;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    padding: 0.9rem 0;
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--ink-mute);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .tabs button:hover { color: var(--ink); }
+
+  .tabs button[aria-selected="true"] {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+  }
+
+  .tabs button:focus-visible { outline: 1px solid var(--accent); outline-offset: 3px; }
+
+  [role="tabpanel"] {
+    padding-top: 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3.25rem;
+  }
+
+  .panel-note {
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+    border-left: 1px solid var(--hair);
+    padding-left: 1.1rem;
+    margin: 0;
+  }
+
+  /* ---------- contents block ---------- */
+
+  .index {
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--hair);
+    padding: 1.2rem 0 1.4rem;
+  }
+
+  .index h2 {
+    font-family: var(--sans);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.26em;
+    color: var(--accent);
+    margin: 0 0 1.1rem;
+  }
+
+  .index ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.7rem;
+    counter-reset: q;
+  }
+
+  .index li {
+    counter-increment: q;
+    display: grid;
+    grid-template-columns: 2.1rem 1fr;
+    align-items: baseline;
+    font-size: 0.95rem;
+  }
+
+  .index li::before {
+    content: counter(q, decimal-leading-zero);
+    font-family: var(--serif);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .index a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+  }
+
+  .index a:hover { border-bottom-color: var(--accent); }
+
+  /* ---------- sections ---------- */
+
+  section { display: flex; flex-direction: column; gap: 1.6rem; }
+
+  h2.part {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 1.42rem;
+    line-height: 1.45;
+    margin: 0;
+    padding-top: 0.75rem;
+    border-top: 2px solid var(--ink);
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 0.98rem;
+    line-height: 1.6;
+    letter-spacing: 0.02em;
+    margin: 1.1rem 0 0;
+    padding-bottom: 0.45rem;
+    border-bottom: 1px solid var(--hair-soft);
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  h4 {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 0.92rem;
+    margin: 0.7rem 0 0;
+    color: var(--accent);
+  }
+
+  p { margin: 0; }
+
+  .block { display: flex; flex-direction: column; gap: 1.05rem; }
+
+  strong { font-weight: 700; color: var(--ink); }
+
+  ul.plain, ol.plain {
+    margin: 0;
+    padding-left: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  ul.plain li::marker { color: var(--accent); }
+  ol.plain li::marker { color: var(--accent); font-family: var(--serif); font-weight: 600; }
+
+  /* ---------- reasons ---------- */
+
+  .reasons {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1.35rem;
+  }
+
+  .reasons li {
+    display: grid;
+    grid-template-columns: 2.2rem 1fr;
+    gap: 1rem;
+  }
+
+  .reasons .num {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--accent);
+    border-top: 1px solid var(--accent);
+    padding-top: 0.5rem;
+    align-self: start;
+  }
+
+  /* ---------- ask ---------- */
+
+  .ask {
+    border-top: 1px solid var(--accent);
+    border-bottom: 1px solid var(--hair);
+    padding: 0.95rem 0 1.05rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    scroll-margin-top: 1.5rem;
+  }
+
+  .ask .tag {
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.26em;
+    color: var(--accent);
+  }
+
+  .ask p {
+    font-family: var(--serif);
+    font-size: 1.08rem;
+    font-weight: 600;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+
+  /* ---------- exhibits ---------- */
+
+  .tablewrap { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.855rem;
+    line-height: 1.72;
+    min-width: 28rem;
+  }
+
+  caption {
+    caption-side: top;
+    text-align: left;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    color: var(--ink-mute);
+    padding: 0 0 0.7rem;
+  }
+
+  thead th {
+    text-align: left;
+    vertical-align: bottom;
+    font-weight: 700;
+    font-size: 0.66rem;
+    letter-spacing: 0.18em;
+    color: var(--ink-mute);
+    padding: 0 0.85rem 0.55rem;
+    border-top: 1.5px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    white-space: nowrap;
+  }
+
+  thead th:first-child { padding-left: 0; }
+  thead th:last-child { padding-right: 0; }
+
+  tbody td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.7rem 0.85rem;
+    border-bottom: 1px solid var(--hair-soft);
+  }
+
+  tbody td:first-child { padding-left: 0; }
+  tbody td:last-child { padding-right: 0; }
+
+  tbody tr:last-child td { border-bottom: 1px solid var(--hair); }
+
+  td.key {
+    font-family: var(--serif);
+    font-weight: 600;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  td.ref { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink-soft); }
+
+  a { color: var(--accent); text-decoration-thickness: 0.5px; text-underline-offset: 3px; }
+  a:hover { color: var(--accent-up); }
+  a:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+
+  .cite { font-style: normal; color: var(--ink-mute); }
+
+  .note {
+    padding-top: 1rem;
+    border-top: 1px solid var(--hair-soft);
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 34rem) {
+    .reasons li { grid-template-columns: 1fr; gap: 0.3rem; }
+    .reasons .num { border-top: none; padding-top: 0; }
+    .sheet { padding: 0 1.1rem 4rem; }
+    .tabs { gap: 1.4rem; }
+    .eyebrow { flex-direction: column; gap: 0.35rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  @media print {
+    body { background: #fff; color: #000; font-size: 10pt; line-height: 1.55; }
+    .sheet { max-width: none; margin: 0; padding: 0; border: none; }
+    .tabs { display: none; }
+    [role="tabpanel"][hidden] { display: flex !important; }
+    [role="tabpanel"] { break-before: page; padding-top: 1rem; }
+    [role="tabpanel"]:first-of-type { break-before: auto; }
+    .index { break-inside: avoid; }
+    h2.part, h3, h4 { break-after: avoid; }
+    .ask, .tablewrap, table tr { break-inside: avoid; }
+    a { color: #000; text-decoration: none; }
+  }
+</style>
+
+<div class="sheet">
+
+  <header class="masthead">
+    <div class="rule-top">
+      <div class="eyebrow">
+        <span class="firm">銀行實務端</span>
+        <span>討論用資料</span>
+        <time datetime="2026-09-17">2026.09.17</time>
+      </div>
+    </div>
+    <h1>GenAI 行為模擬命題討論稿</h1>
+    <div class="rule-bottom"></div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="文件分頁">
+    <button role="tab" id="tab-a" aria-controls="panel-a" aria-selected="true">討論稿</button>
+    <button role="tab" id="tab-b" aria-controls="panel-b" aria-selected="false">原始提案構想</button>
+  </div>
+
+  <!-- ============ TAB A ============ -->
+  <div role="tabpanel" id="panel-a" aria-labelledby="tab-a" tabindex="0">
+
+    <nav class="index" aria-label="本次想請教的事項">
+      <h2>本次想請教的四件事</h2>
+      <ol>
+        <li><a href="#ask-1">原出題方向是否該調整？還是仍有值得做的空間、只是我們沒看出來？</a></li>
+        <li><a href="#ask-2">把 GenAI 測試與 BPT 結合，在研究上是否站得住腳？</a></li>
+        <li><a href="#ask-3">所列的公開資料是否足夠？有沒有必須補上的來源？</a></li>
+        <li><a href="#ask-4">這樣的難度，是否符合競賽該有的水準？</a></li>
+      </ol>
+    </nav>
+
+    <section>
+      <h2 class="part">一、出題背景</h2>
+
+      <div class="block">
+        <h3>1. 原出題方向的檢討</h3>
+        <p>本次競賽原訂命題為「GenAI 能否重現行為財務理論」。參賽者自選一項行為偏誤（損失趨避、框架效應、過度自信等），請 AI 扮演受試者作答，再與既有文獻比對，藉此評估 GenAI 作為行為模擬工具的可用性。完整原始構想見「原始提案構想」分頁。</p>
+        <p>在看過胡教授提供的文獻清單後，我們的疑慮是：<strong>這個方向看起來大部分已經被驗證過了。</strong></p>
+        <p>其中至少兩篇與原命題高度重疊：</p>
+        <ul class="plain">
+          <li><strong>Behavioral Economics of AI（Cong、Huang、Jin 等）</strong>：已有系統地檢驗 AI 在經濟與金融決策中的各種行為偏誤，並比較不同模型之間的差異。</li>
+          <li><strong>AI as Decision-Maker（Ouyang 等）</strong>：跨五十個模型檢驗風險偏好，並指出模型被調校得更聽話之後會變得更保守。</li>
+        </ul>
+        <p>若參賽者依原命題進行，作品很可能只是上述研究的縮小版本。</p>
+        <p>另有三篇性質不同，是做法上的提醒——怎麼判斷 AI 是在回憶還是在推理、在題目裡透露研究目的會讓答案偏掉、把公司名稱之類的資訊遮掉會付出什麼代價。這些是注意事項，不是同一個問題的答案。</p>
+
+        <div class="ask" id="ask-1">
+          <span class="tag">想請教的第一件事</span>
+          <p>這個方向是否該調整？還是仍有值得做的空間、只是我們沒看出來？</p>
+        </div>
+      </div>
+
+      <div class="block">
+        <h3>2. 與銀行實務端研究方向的結合</h3>
+        <p>我們內部目前正在研究行為投資組合理論（Behavioral Portfolio Theory，以下簡稱 BPT）在財富管理服務上的應用可能性。</p>
+        <p>因此我們在想，是否可以把命題的理論核心換成 BPT，讓題目同時具備學術上的新意與實務上的落點。</p>
+
+        <div class="ask" id="ask-2">
+          <span class="tag">想請教的第二件事</span>
+          <p>把 GenAI 測試與 BPT 結合，在研究上是否站得住腳？</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="part">二、與 BPT 結合的初步思考方向</h2>
+
+      <div class="block">
+        <h3>1. BPT 與財富管理業務可結合的面向</h3>
+        <p>我們認為有四點可以接上，由淺入深：</p>
+        <ol class="reasons">
+          <li>
+            <span class="num">一</span>
+            <p><strong>它的分層結構，和財管的分層服務天然對應。</strong>BPT 主張人會把資產切成幾個心理上的口袋各自處理——一層求安穩、一層求成長。這正是市場上分層配置服務在做的事，理論與實務的形狀是一致的。</p>
+          </li>
+          <li>
+            <span class="num">二</span>
+            <p><strong>它把「客戶的目標」放進模型中心，而不是只看風險屬性。</strong>傳統模型用一個數字描述一個人有多怕波動。BPT 則問「你要達到多少、把握有幾成」。這比較接近理專實際面對客戶的情境。</p>
+          </li>
+          <li>
+            <span class="num">三</span>
+            <p><strong>它算出來的結果可以直接對應到商品貨架。</strong>BPT 給的不是一個抽象分數，而是「每一種景氣下客戶手上會有多少錢」，可以往回推算該配哪些商品。</p>
+          </li>
+          <li>
+            <span class="num">四</span>
+            <p><strong>這套理論已經被商業化，而且規模可觀。</strong>對岸已有銀行將它落實為四層資產配置服務體系，服務客戶數以百萬計。國內同業亦有類似的評估在進行。</p>
+          </li>
+        </ol>
+        <p>第四點是我們最在意的。這類系統上線前，不可能找數千名真實客戶試跑。<strong>若 GenAI 能在上線前先模擬客戶跑過一輪，這件事的價值就不只是學術驗證。</strong></p>
+      </div>
+
+      <div class="block">
+        <h3>2. 主命題與子命題</h3>
+        <p><strong>主命題：GenAI 能否作為分層資產配置服務上線前的模擬測試工具？</strong></p>
+        <p>底下五個子命題，第一個是前提，其餘四個各自對應一個實務決策：</p>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr><th scope="col">編號</th><th scope="col">子命題</th><th scope="col">大致做法</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="key">一</td>
+                <td>AI 模擬出的配置，是否呈現 BPT 預測的樣子？是否能排除它只是把論文背出來？</td>
+                <td>題目中不提理論名稱、情境數字隨機更換，請 AI 扮演客戶做配置，再與理論算出的標準答案比對；同時測 AI 對該理論記得多少</td>
+              </tr>
+              <tr>
+                <td class="key">二</td>
+                <td>介面改成分層呈現，是否改變同一位客戶的配置結果？</td>
+                <td>固定客戶、商品與金額，只換畫面：一張完整表格／四層分開檢視／四層再加紅黃綠燈，比較三者的配置差異</td>
+              </tr>
+              <tr>
+                <td class="key">三</td>
+                <td>只掌握客戶部分資產時，配置建議會偏差多少？</td>
+                <td>先造出一批持倉完整的虛擬客戶，隨機遮蔽一部分，讓 AI 只依看得見的部分出建議，再與完整持倉的正解比對</td>
+              </tr>
+              <tr>
+                <td class="key">四</td>
+                <td>AI 顧問的保守傾向從何而來？是否抹掉客戶想把資產做大的那一面？</td>
+                <td>固定客戶設定，比較不同模型與不同調校版本給出的配置，看被改變的是哪一項</td>
+              </tr>
+              <tr>
+                <td class="key">五</td>
+                <td>不同行情走勢下，AI 模擬的進出場行為，能否對上真實統計？</td>
+                <td>把 AI 扮演的客戶放進上漲、盤整、下跌各種行情路徑，逐期問它是否調整，再與公會公布的實際申購與買回統計比對</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="block">
+        <h3>3. 各子命題的驗證目的與潛在應用</h3>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr><th scope="col">子命題</th><th scope="col">驗證目的</th><th scope="col">潛在實務應用</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="key">一</td>
+                <td>確認 AI 是在模擬客戶的判斷，而不是把既有文獻複述一遍。這是其餘四項成立的前提</td>
+                <td>決定 GenAI 模擬能不能被當成可信的測試工具，是整個做法的門檻</td>
+              </tr>
+              <tr>
+                <td class="key">二</td>
+                <td>分層呈現不是中性的：理論預測一旦把資產切進不同口袋，客戶會對每個口袋各自盤算，安全層變更保守、進取層變更集中。本項是要量出這股推力有多大</td>
+                <td>配置健診介面的設計依據：要不要分層、要不要加燈號。特別是燈號會不會把所有客戶的配置壓成同一種，讓個人化配置變成千人一面</td>
+              </tr>
+              <tr>
+                <td class="key">三</td>
+                <td>找出掌握比例的分界線，低於這條線就不適合出具診斷</td>
+                <td>高資產客群的服務規則：哪些客戶適合全景式建議、哪些只能做單一商品深化</td>
+              </tr>
+              <tr>
+                <td class="key">四</td>
+                <td>確認 AI 是不是一律把客戶的目標想得太低</td>
+                <td>AI 理專與投資陪伴工具的商品適合度控管</td>
+              </tr>
+              <tr>
+                <td class="key">五</td>
+                <td>檢驗 AI 能否重現客戶在上漲、盤整、下跌各階段的進出時點與強度</td>
+                <td>各種市況下的客戶溝通腳本：大漲時的追高提醒、盤整時的續扣說服、大跌時的情緒緩衝</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>子命題一是地基。它若不成立，其餘四項做出來的結果都無從解讀。因此我們的構想是把它設為所有參賽隊伍必須先通過的關卡，而不是選擇性的檢查項目。</p>
+      </div>
+
+      <div class="block">
+        <h3>4. 可取得的資料</h3>
+        <p>以下是我們盤點的公開資料，設計原則是「主要驗證必須能用公開資料完成」。網址為 2026 年 9 月查證結果。</p>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr><th scope="col">資料來源</th><th scope="col">內容</th><th scope="col">用於子命題</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><a href="https://www.sitca.org.tw/ROC/Industry/IN2002.aspx?PGMID=IN0202">投信投顧公會統計資料</a></td><td>境內基金規模、申購與買回明細</td><td class="ref">二、五</td></tr>
+              <tr><td><a href="https://announce.fundclear.com.tw/MOPSonshoreFundWeb/C02.jsp">基金資訊觀測站</a></td><td>境外基金公告與市場資訊</td><td class="ref">二、五</td></tr>
+              <tr><td><a href="https://www.stat.gov.tw/cl.aspx?n=2693">統計資訊網—家庭收支調查</a></td><td>年齡、所得、家庭結構、資產負債</td><td class="ref">一、二、三</td></tr>
+              <tr><td><a href="https://ws.dgbas.gov.tw/win/fies/214.asp">家庭收支調查歷年資料</a></td><td>歷年統計表</td><td class="ref">一、二、三</td></tr>
+              <tr><td><a href="https://srda.sinica.edu.tw/">學術調查研究資料庫 SRDA</a></td><td>家庭收支調查原始資料</td><td class="ref">三、四</td></tr>
+              <tr><td><a href="https://srda.sinica.edu.tw/plan/?idx=SRDA.AS002">臺灣社會變遷基本調查</a></td><td>風險態度與理財行為題組</td><td class="ref">四</td></tr>
+              <tr><td><a href="https://www.banking.gov.tw/">金管會銀行局</a></td><td>財富管理與信託業務統計</td><td class="ref">二、三</td></tr>
+              <tr><td><a href="https://www.sfb.gov.tw/">金管會證券期貨局</a></td><td>基金與信託統計、法規</td><td class="ref">二、三</td></tr>
+              <tr><td><a href="https://www.lia-roc.org.tw/">壽險公會</a></td><td>保障型商品資訊</td><td class="ref">二</td></tr>
+              <tr><td><a href="https://www.tejwin.com/">TEJ 台灣經濟新報</a></td><td>基金淨值、股票報酬與彼此的連動</td><td class="ref">一、二、五</td></tr>
+              <tr><td><a href="https://www.briq-institute.org/global-preferences/home">Global Preferences Survey</a></td><td>76 國風險偏好調查，含台灣</td><td class="ref">四</td></tr>
+              <tr><td><a href="https://www.federalreserve.gov/econres/scfindex.htm">US Survey of Consumer Finances</a></td><td>美國家庭分層配置參照基準</td><td class="ref">二、三</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>另需自行產生的部分：測試情境、依論文公式算出的理論標準答案、各模型的問答紀錄。</p>
+
+        <div class="ask" id="ask-3">
+          <span class="tag">想請教的第三件事</span>
+          <p>這些資料是否足夠？有沒有必須補上的來源？</p>
+        </div>
+      </div>
+
+      <div class="block">
+        <h3>5. 難度評估</h3>
+        <p>我們擔心的是難度不好拿捏——太淺無法分出高下，太深則無人敢報名。目前想到的難點如下：</p>
+
+        <h4>一、AI 不一定給得出合格的答案</h4>
+        <p>要它一邊算出一組金額、一邊守住預算上限，AI 在這種題目上其實不太可靠。實際會出現算超過預算、格式不對、同一題問兩次答案差很多。這些狀況要怎麼處理，會直接影響最後的結論。</p>
+
+        <h4>二、標準答案裡有一個數字是不知道的</h4>
+        <p>要算出 BPT 的標準答案，得先知道這位客戶能接受多少機率達不到目標，但 AI 不會告訴你。可以挑最接近的那一組當基準，也可以另外設計題目先問出來，兩種做法各有各的問題。</p>
+
+        <h4>三、AI 給出的形狀可能是假的</h4>
+        <p>這是我們認為最關鍵的一點。AI 本來就偏好寫整數、偏好把同一個數字重複幾次，所以它給出的形狀，可能只是它的寫法習慣，不是真的在替客戶做取捨。兩者看起來一模一樣，沒排除掉就等於沒有結論。</p>
+        <p>我們想到的排除方式是：把目標金額改成一個非整數（例如 2.37），看 AI 的答案會不會精準跟著移動。會跟著移動，代表它真的在對準目標；不會，就代表它只是在寫好看的數字。但這只是我們的想法，不確定夠不夠。</p>
+
+        <h4>四、同一題問很多次，不等於問了很多人</h4>
+        <p>同一個人物設定、同一道題目重複問二十次，收回來的二十個答案其實高度相似，不能當成二十筆各自獨立的資料。若直接當成二十份樣本去算，會誤以為證據比實際充分，結論看起來也會比實際上更確定。這要怎麼處理，我們並不清楚。</p>
+
+        <h4>五、要怎麼測 AI 記得多少，沒有現成做法</h4>
+        <p>胡教授提供的文獻測的是「AI 記不記得某家公司某一天發生了什麼事」，測的是一件具體的事。我們要測的是「AI 記不記得一套理論」，性質不一樣，沒有現成的測法可以照抄，得自己想。</p>
+
+        <h4>六、理論假設的市場，現實中並不存在</h4>
+        <p>BPT 假設可以自由買賣「萬一發生某種景氣就付錢」的保障，現實中只有基金、債券、保單。要做貼近實務的版本，必須先把真實商品換算成「在各種景氣下分別值多少錢」，這一步有不少主觀判斷。</p>
+
+        <p class="note">另有一項我們自己也沒把握的地方：BPT 用五個指標描述一個人的風險態度，彈性相當大。如果允許事後回頭調整這些指標去配合 AI 的答案，那「AI 符合 BPT」就變成一句永遠不會錯、也永遠無法被推翻的話。我們目前的理解是，不管那五個指標怎麼設定，配置的形狀都是一樣的，所以只檢查形狀是安全的——但不確定這個理解對不對。</p>
+
+        <div class="ask" id="ask-4">
+          <span class="tag">想請教的第四件事</span>
+          <p>這樣的難度，是否符合競賽該有的水準？</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="part">三、其他討論</h2>
+      <p>我們目前的想法是把 GenAI 當成「上線前的模擬客戶」，用來測試介面設計、診斷規則與溝通腳本。但這是從實務需求出發的想像，不確定在做法上是否恰當。</p>
+      <div class="ask">
+        <span class="tag">開放討論</span>
+        <p>以 GenAI 作為財管服務上線前的驗測工具，是否有更適合的做法或研究設計？或者這個用途本身就有根本上的限制？</p>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="part">附錄：參考文獻</h2>
+
+      <div class="tablewrap">
+        <table>
+          <caption>BPT 相關（我們整理）</caption>
+          <thead>
+            <tr><th scope="col">文獻</th><th scope="col">內容</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><a href="https://www.jstor.org/stable/2676187">Shefrin &amp; Statman (2000). Behavioral Portfolio Theory. <span class="cite">JFQA 35(2), 127-151</span></a></td><td>主要理論來源</td></tr>
+            <tr><td>Lopes, L. (1987). Between Hope and Fear: The Psychology of Risk. <span class="cite">Advances in Experimental Social Psychology 20, 255-295</span></td><td>BPT 的理論基礎</td></tr>
+            <tr><td><a href="https://www.jstor.org/stable/1914185">Kahneman &amp; Tversky (1979). Prospect Theory. <span class="cite">Econometrica 47(2), 263-291</span></a></td><td>心理帳戶概念的來源</td></tr>
+            <tr><td>Fisher &amp; Statman (1997). Investment Advice from Mutual Fund Companies. <span class="cite">J. Portfolio Management 24(1), 9-25</span></td><td>基金公司分層建議的實證</td></tr>
+            <tr><td><a href="https://www.jstor.org/stable/2950862">Canner, Mankiw &amp; Weil (1997). An Asset Allocation Puzzle. <span class="cite">AER 87(1), 181-191</span></a></td><td>顧問建議與傳統理論不符</td></tr>
+            <tr><td><a href="https://www.jstor.org/stable/1809147">Kroll, Levy &amp; Rapoport (1988). <span class="cite">AER 78(3), 500-518</span></a></td><td>實驗顯示受試者忽略資產之間的連動</td></tr>
+            <tr><td><a href="https://www.jstor.org/stable/1907413">Roy, A. D. (1952). Safety-First and the Holding of Assets. <span class="cite">Econometrica 20(3), 431-449</span></a></td><td>BPT 的前身</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tablewrap">
+        <table>
+          <caption>AI 與金融相關（胡教授提供）</caption>
+          <thead>
+            <tr><th scope="col">文獻</th><th scope="col">與本命題的關係</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5213130">Behavioral Economics of AI: LLM Biases and Corrections</a></td><td>與原命題高度重疊，是重新檢討方向的主要原因</td></tr>
+            <tr><td><a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4851711">AI as Decision-Maker: Ethics and Risk Preferences of LLMs</a></td><td>同上，並為子命題四的起點</td></tr>
+            <tr><td><a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5985277">Detecting Lookahead Bias in LLM Forecasts</a></td><td>怎麼判斷 AI 是在回憶還是在推理</td></tr>
+            <tr><td><a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6204619">Seeing the Goal, Missing the Truth</a></td><td>在題目裡透露研究目的會讓答案偏掉</td></tr>
+            <tr><td><a href="https://arxiv.org/html/2511.15364v1">Anonymization and Information Loss</a></td><td>把資訊遮掉會付出的代價</td></tr>
+            <tr><td><a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5395056">Large Language Model Disagreement</a></td><td>用多個 AI 互相比較的做法</td></tr>
+            <tr><td><a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5452175">AI, Opinion Ecosystems, and Finance</a></td><td>同一個 AI 換個場合行為就不同</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ============ TAB B ============ -->
+  <div role="tabpanel" id="panel-b" aria-labelledby="tab-b" tabindex="0" hidden>
+
+    <p class="panel-note">以下為本次競賽最初擬定的完整命題，尚未納入 BPT。保留於此，作為討論時的對照。</p>
+
+    <section>
+      <h2 class="part">競賽題目名稱</h2>
+      <p><strong>GenAI 能否重現行為財務理論？——以模擬資料驗證金融決策偏誤之可用性研究</strong></p>
+    </section>
+
+    <section>
+      <h2 class="part">題目說明</h2>
+      <p>近年生成式 AI（GenAI）快速發展，除了內容生成外，也逐漸被應用於模擬使用者回應、建構合成樣本（synthetic samples）與情境決策測試。然而，在金融決策情境中，GenAI 所模擬的行為結果，是否能重現既有行為財務理論所揭示的人類決策偏誤，仍有待系統性驗證。</p>
+      <p>本題鼓勵參賽者以已具文獻支持或實證基礎的行為財務理論為核心，設計以 GenAI 為基礎的模擬受試者、決策代理人或合成資料生成方法，觀察其在特定金融情境下所產生的決策結果，是否能重現理論預測的行為模式。參賽者應進一步比較模擬結果與既有理論、實證研究或公開研究結論之間的一致性，評估 GenAI 作為行為財務研究輔助工具的可用性、穩定性與限制。</p>
+      <p>本題重點不在於證明 AI 可完全取代真人受試者，而在於探討：<strong>GenAI 是否能作為一種有效的行為模擬工具，用於重現已知的金融決策偏誤，並作為研究設計、產品測試或情境推演的前期方法。</strong></p>
+    </section>
+
+    <section>
+      <h2 class="part">任務目標</h2>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr><th scope="col">步驟</th><th scope="col">內容</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="key">1</td>
+              <td><strong>選定一項行為財務理論或金融決策偏誤</strong><br>例如損失趨避、框架效應、過度自信、現狀偏誤、心理帳戶、錨定效應、處分效果等。</td>
+            </tr>
+            <tr>
+              <td class="key">2</td>
+              <td><strong>設計 GenAI 模擬方法</strong><br>建立模擬受試者、決策代理人、persona 設計或合成資料生成流程，說明其邏輯、假設與參數設定。</td>
+            </tr>
+            <tr>
+              <td class="key">3</td>
+              <td><strong>產出模擬資料並進行驗證</strong><br>透過實驗設計、問卷情境、投資決策任務或其他方法，檢驗 GenAI 模擬結果是否符合既有理論預測。</td>
+            </tr>
+            <tr>
+              <td class="key">4</td>
+              <td><strong>與文獻或既有研究結論進行比較</strong><br>說明模擬結果與理論方向、效果模式或既有實證發現的一致程度。</td>
+            </tr>
+            <tr>
+              <td class="key">5</td>
+              <td><strong>評估方法的可用性與限制</strong><br>分析 GenAI 模擬在何種條件下較能重現理論、何種情境下容易失真，並提出其在金融研究或實務應用上的潛力與邊界。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="part">產出內容建議</h2>
+      <p>參賽作品可包含但不限於以下內容：</p>
+      <ol class="plain">
+        <li>研究問題與理論背景</li>
+        <li>文獻整理與理論依據</li>
+        <li>模擬架構設計</li>
+        <li>Prompt 設計或 agent 設計</li>
+        <li>合成資料生成流程</li>
+        <li>驗證方法與評估指標</li>
+        <li>結果分析與視覺化</li>
+        <li>與既有研究結論之比較</li>
+        <li>方法限制、偏誤來源與改進方向</li>
+        <li>金融應用情境建議</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 class="part">建議研究案例參考</h2>
+      <ol class="plain">
+        <li>GenAI 是否能重現損失趨避現象？</li>
+        <li>不同 prompt 設計是否影響框架效應的呈現？</li>
+        <li>不同 persona 設定下，是否會產生不同風險偏好？</li>
+        <li>不同模型或模擬架構對同一理論的重現能力是否一致？</li>
+        <li>GenAI 模擬能否作為金融產品測試、風險揭露設計或客戶互動流程設計的前期工具？</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 class="part">評估重點</h2>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr><th scope="col">面向</th><th scope="col">說明</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">理論掌握度</td><td>是否正確理解並引用行為財務理論或既有研究。</td></tr>
+            <tr><td class="key">方法設計完整性</td><td>模擬架構、情境設計、假設設定與驗證流程是否合理清楚。</td></tr>
+            <tr><td class="key">驗證嚴謹性</td><td>是否有明確比較基準，並能說明模擬結果與理論的一致或偏離。</td></tr>
+            <tr><td class="key">分析深度</td><td>是否能解釋結果成因、限制與可能偏差來源。</td></tr>
+            <tr><td class="key">創新性與應用性</td><td>是否提出具新意的方法，並能連結金融研究或實務場景。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+</div>
+
+<script>
+  (function () {
+    var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+
+    function select(tab) {
+      tabs.forEach(function (t) {
+        var selected = t === tab;
+        t.setAttribute('aria-selected', selected ? 'true' : 'false');
+        document.getElementById(t.getAttribute('aria-controls')).hidden = !selected;
+      });
+      tab.focus();
+    }
+
+    tabs.forEach(function (tab, i) {
+      tab.addEventListener('click', function () { select(tab); });
+      tab.addEventListener('keydown', function (e) {
+        var next = null;
+        if (e.key === 'ArrowRight') next = tabs[(i + 1) % tabs.length];
+        if (e.key === 'ArrowLeft') next = tabs[(i - 1 + tabs.length) % tabs.length];
+        if (e.key === 'Home') next = tabs[0];
+        if (e.key === 'End') next = tabs[tabs.length - 1];
+        if (next) { e.preventDefault(); select(next); }
+      });
+    });
+
+    document.querySelectorAll('.index a').forEach(function (a) {
+      a.addEventListener('click', function () { select(tabs[0]); });
+    });
+  })();
+</script>
